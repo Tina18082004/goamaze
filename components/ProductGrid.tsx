@@ -21,7 +21,7 @@ type SpeechRecognitionEvent = any;
 interface Product {
  
   // MongoDB documents use _id; the static JSON uses id (number)
-  _id?:          string | number;
+  _id?:          string;
   id:            number;
   title:         string;
   subtitle:      string;
@@ -537,7 +537,7 @@ export default function ProductGrid() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.08, duration: 0.4 }}
                       >
-                        <ProductCard {...product} id={product._id ?? String(product.id ?? i)} />
+                        <ProductCard {...product}  />
                       </motion.div>
                     ))}
                   </div>
@@ -550,7 +550,7 @@ export default function ProductGrid() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.07, duration: 0.45 }}
                   >
-                    <ProductCard {...product} id={product._id ?? String(product.id ?? i)} />
+                    <ProductCard {...product}  />
                   </motion.div>
                 ))
               )}

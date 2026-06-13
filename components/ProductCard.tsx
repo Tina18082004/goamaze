@@ -6,8 +6,8 @@ import { HiStar, HiExternalLink } from "react-icons/hi";
 
 type Product = {
   // Accepts both MongoDB _id (string) and static JSON id (number)
-  id: string | number;
-  _id?:          string;
+  id:            string | number;
+  _id?:          string | number;
   title:         string;
   subtitle:      string;
   price:         string;
