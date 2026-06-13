@@ -6,12 +6,23 @@ import { HiSearch } from "react-icons/hi";
 import ProductCard from "./ProductCard";
 import productsJsonFallback from "@/data/products.json";
 
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
+type SpeechRecognition = any;
+type SpeechRecognitionEvent = any;
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Product = {
+interface Product {
+ 
   // MongoDB documents use _id; the static JSON uses id (number)
-  _id?:          string;
-  id?:           number;
+  _id?:          string | number;
+  id:            number;
   title:         string;
   subtitle:      string;
   price:         string;
@@ -156,8 +167,7 @@ export default function ProductGrid() {
     setVoiceError("");
 
     const SpeechRecognition =
-      (typeof window !== "undefined") &&
-      (window.SpeechRecognition || (window as Window & typeof globalThis & { webkitSpeechRecognition?: typeof window.SpeechRecognition }).webkitSpeechRecognition);
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       setVoiceError("Voice search is not supported in this browser. Try Chrome.");
@@ -174,7 +184,7 @@ export default function ProductGrid() {
 
       rec.onstart  = () => setListening(true);
       rec.onend    = () => setListening(false);
-      rec.onerror  = (e) => {
+     rec.onerror = (e: any) => {
         setListening(false);
         if (e.error === "not-allowed") {
           setVoiceError("Microphone access denied. Allow mic in browser settings.");
@@ -187,7 +197,7 @@ export default function ProductGrid() {
 
       rec.onresult = (e: SpeechRecognitionEvent) => {
         const transcript = Array.from(e.results)
-          .map(r => r[0].transcript)
+          .map((r: any) => r[0].transcript)
           .join("");
         setSearch(transcript);
       };
