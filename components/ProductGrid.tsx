@@ -37,7 +37,15 @@ interface Product {
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const CATEGORIES = ["All", "Home Decor", "Lifestyle", "Kitchen", "Books", "Entertainment"];
+const CATEGORIES = [
+  "All",
+  "School Bags",
+  "Tiffin Bags",
+  "Rain Coats",
+  "Umbrellas",
+  "Tiffin Boxes",
+  "Water Bottles"
+];
 
 // Typed JSON fallback
 const FALLBACK_PRODUCTS: Product[] = productsJsonFallback as Product[];
@@ -123,8 +131,15 @@ export default function ProductGrid() {
 
         const json = await res.json();
         if (!cancelled && json.success && Array.isArray(json.data)) {
-          setProducts(json.data);
-          setUsingFallback(false);
+          // If the database is connected but completely empty (unseeded), trigger the fallback JSON
+          if (json.data.length === 0) {
+            console.warn("[ProductGrid] MongoDB connected but no products found. Using fallback.");
+            setProducts(FALLBACK_PRODUCTS);
+            setUsingFallback(true);
+          } else {
+            setProducts(json.data);
+            setUsingFallback(false);
+          }
         }
       } catch (err) {
         console.warn("[ProductGrid] MongoDB fetch failed, using products.json fallback:", err);
@@ -146,21 +161,28 @@ export default function ProductGrid() {
     ? products.filter(p => {
         const catMatch = active === "All" || p.category === active;
         if (!debouncedQ.trim()) return catMatch;
-        const q = debouncedQ.toLowerCase();
-        return catMatch && (
-          p.title.toLowerCase().includes(q)    ||
-          p.subtitle.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q) ||
-          p.badge.toLowerCase().includes(q)    ||
-          p.price.toLowerCase().includes(q)
-        );
+        // Split query into words and match ANY word for broader fuzzy results
+        const words = debouncedQ.toLowerCase().split(/\s+/).filter(Boolean);
+        const haystack = [p.title, p.subtitle, p.category, p.badge, p.price]
+          .join(" ").toLowerCase();
+        const anyWordMatch = words.some(w => haystack.includes(w));
+        return catMatch && anyWordMatch;
       })
     : products;   // API already filtered
 
-  // Suggestions for empty search state
-  const suggestions = (usingFallback ? FALLBACK_PRODUCTS : products)
-    .filter(p => active === "All" || p.category === active)
-    .slice(0, 3);
+  // Suggestions for empty search state — fuzzy across ALL products (ignore category filter)
+  const allSource = usingFallback ? FALLBACK_PRODUCTS : products;
+  const suggestions = debouncedQ.trim()
+    ? (() => {
+        const words = debouncedQ.toLowerCase().split(/\s+/).filter(Boolean);
+        return allSource
+          .filter(p => {
+            const haystack = [p.title, p.subtitle, p.category, p.badge].join(" ").toLowerCase();
+            return words.some(w => haystack.includes(w));
+          })
+          .slice(0, 6);
+      })()
+    : allSource.slice(0, 6);
 
   // ── Web Speech API voice search ────────────────────────────────────────────
   const startListening = useCallback(() => {
@@ -253,27 +275,34 @@ export default function ProductGrid() {
           transition={{ duration: 0.6 }}
           style={{ textAlign: "center", marginBottom: "52px" }}
         >
-          <span className="section-label">✦ Curated Finds</span>
-          <h2 style={{
-            fontFamily:   "var(--font-montserrat)",
-            fontSize:     "clamp(1.9rem, 4vw, 2.8rem)",
-            fontWeight:   800,
-            color:        "var(--text-primary)",
-            marginBottom: "14px",
-          }}>
-            Explore Our <span className="gradient-text">Picks</span>
-          </h2>
-          <p style={{
-            fontFamily: "var(--font-body)",
-            fontSize:   "1rem",
-            color:      "var(--text-muted)",
-            maxWidth:   "440px",
-            margin:     "0 auto",
-            lineHeight:  1.8,
-          }}>
-            Each product is researched, reviewed, and selected for quality,
-            value, and aesthetic appeal.
-          </p>
+          <span className="section-label">✦ School Essentials</span>
+
+<h2
+  style={{
+    fontFamily: "var(--font-montserrat)",
+    fontSize: "clamp(1.9rem, 4vw, 2.8rem)",
+    fontWeight: 800,
+    color: "var(--text-primary)",
+    marginBottom: "14px",
+  }}
+>
+  School <span className="gradient-text">Essentials</span>
+</h2>
+
+<p
+  style={{
+    fontFamily: "var(--font-body)",
+    fontSize: "1rem",
+    color: "var(--text-muted)",
+    maxWidth: "600px",
+    margin: "0 auto",
+    lineHeight: 1.8,
+  }}
+>
+  Discover curated school bags, tiffin bags, rain coats, umbrellas,
+  tiffin boxes and water bottles selected for students and everyday
+  school needs.
+</p>
 
           {/* Fallback badge */}
           <AnimatePresence>

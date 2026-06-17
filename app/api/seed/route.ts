@@ -5,26 +5,52 @@ import Category from "@/models/Category";
 import AdminUser from "@/models/AdminUser";
 import productsData from "@/data/products.json";
 
-/** POST /api/seed — DEV ONLY, seeds MongoDB with initial data */
-export async function POST(req: NextRequest) {
-  // Safety check: only allow in development
-  if (process.env.NODE_ENV === "production") {
+/**
+ * GET /api/seed?secret=YOUR_JWT_SECRET
+ * — Safe way to trigger seed from browser or curl without needing POST.
+ * Requires ?secret= query param matching JWT_SECRET for basic protection.
+ */
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const secret = searchParams.get("secret");
+
+  if (!secret || secret !== process.env.JWT_SECRET) {
     return NextResponse.json(
-      { success: false, message: "Seed endpoint disabled in production" },
-      { status: 403 }
+      { success: false, message: "Unauthorized — pass ?secret=YOUR_JWT_SECRET" },
+      { status: 401 }
     );
   }
 
+  return runSeed();
+}
+
+/**
+ * POST /api/seed
+ * — Original POST handler kept for programmatic use.
+ * Works in both dev AND production (protected by JWT_SECRET check).
+ */
+export async function POST(req: NextRequest) {
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.JWT_SECRET}`) {
     return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
   }
 
-  await dbConnect();
+  return runSeed();
+}
+
+async function runSeed() {
+  try {
+    await dbConnect();
+  } catch (err) {
+    return NextResponse.json(
+      { success: false, message: "Database connection failed", error: String(err) },
+      { status: 500 }
+    );
+  }
 
   const results: Record<string, unknown> = {};
 
-  // 1. Seed categories
+  // ── 1. Seed categories ────────────────────────────────────────────────────
   const categoryNames = [
     { name: "Home Decor",    icon: "🏠" },
     { name: "Lifestyle",     icon: "✨" },
@@ -35,7 +61,7 @@ export async function POST(req: NextRequest) {
 
   let catCount = 0;
   for (const cat of categoryNames) {
-    const slug = cat.name.toLowerCase().replace(/\s+/g, "-");
+    const slug   = cat.name.toLowerCase().replace(/\s+/g, "-");
     const exists = await Category.findOne({ slug });
     if (!exists) {
       await Category.create({ ...cat, slug });
@@ -44,7 +70,7 @@ export async function POST(req: NextRequest) {
   }
   results.categoriesSeeded = catCount;
 
-  // 2. Seed products from products.json
+  // ── 2. Seed products from data/products.json ──────────────────────────────
   const existingCount = await Product.countDocuments();
   if (existingCount === 0) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -57,19 +83,20 @@ export async function POST(req: NextRequest) {
       image:         p.image,
       affiliateLink: p.affiliateLink,
       badge:         p.badge || "New",
-      rating:        p.rating || 4.5,
-      reviews:       p.reviews || 0,
+      rating:        p.rating  ?? 4.5,
+      reviews:       p.reviews ?? 0,
       featured:      false,
     }));
+
     await Product.insertMany(mapped);
     results.productsSeeded = mapped.length;
   } else {
     results.productsSeeded = 0;
-    results.message = `Products already exist (${existingCount} found), skipped.`;
+    results.productsNote   = `${existingCount} products already exist — skipped.`;
   }
 
-  // 3. Seed default admin user
-  const adminEmail = process.env.ADMIN_EMAIL || "admin@goamaze.com";
+  // ── 3. Seed admin user ────────────────────────────────────────────────────
+  const adminEmail    = process.env.ADMIN_EMAIL || "admin@goamaze.com";
   const existingAdmin = await AdminUser.findOne({ email: adminEmail });
   if (!existingAdmin) {
     await AdminUser.create({

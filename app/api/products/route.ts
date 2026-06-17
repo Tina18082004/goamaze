@@ -11,7 +11,7 @@ const ProductSchema = z.object({
   price:         z.string().min(1),
   originalPrice: z.string().min(1),
   category:      z.string().min(1),
-  image:         z.string().url(),
+  image:         z.string().min(1), // Relaxed from .url() to allow relative paths like "/images/..."
   affiliateLink: z.string().url(),
   badge:         z.string().optional(),
   rating:        z.number().min(0).max(5).optional(),

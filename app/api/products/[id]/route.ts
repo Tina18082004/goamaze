@@ -12,7 +12,7 @@ const UpdateSchema = z.object({
   price:         z.string().min(1).optional(),
   originalPrice: z.string().min(1).optional(),
   category:      z.string().min(1).optional(),
-  image:         z.string().url().optional(),
+  image:          z.string().min(1).optional(),
   affiliateLink: z.string().url().optional(),
   badge:         z.string().optional(),
   rating:        z.number().min(0).max(5).optional(),
