@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { HiStar, HiExternalLink } from "react-icons/hi";
 
 type Product = {
-  // Accepts both MongoDB _id (string) and static JSON id (number)
   id:            string | number;
   _id?:          string | number;
   title:         string;
@@ -38,18 +37,11 @@ const badgeColors: Record<string, { bg: string; color: string }> = {
   "New Arrival":        { bg: "rgba(234,179,8,0.18)",   color: "#FDE047" },
 };
 
-/**
- * Determine whether a URL can be handled by next/image.
- * next/image requires either a relative path (starts with "/") or an absolute
- * URL from a configured remote pattern (unsplash, cloudinary).
- * All other external URLs (e.g. bare http links not in next.config) fall back
- * to a plain <img> to avoid runtime errors.
- */
 function isOptimisableImage(src: string): boolean {
   if (!src) return false;
-  if (src.startsWith("/"))                      return true;  // local public/
-  if (src.includes("res.cloudinary.com"))       return true;  // Cloudinary CDN
-  if (src.includes("images.unsplash.com"))      return true;  // Unsplash
+  if (src.startsWith("/"))                      return true;
+  if (src.includes("res.cloudinary.com"))       return true;
+  if (src.includes("images.unsplash.com"))      return true;
   return false;
 }
 
@@ -85,9 +77,7 @@ export default function ProductCard({
     >
       {/* Image Container */}
       <div style={{ position: "relative", overflow: "hidden", height: "220px" }}>
-
         {useNextImage ? (
-          /* next/image — auto-optimised, lazy-loaded, Cloudinary/Unsplash/local */
           <Image
             src={image}
             alt={title}
@@ -101,7 +91,6 @@ export default function ProductCard({
             onMouseLeave={e => ((e.currentTarget as HTMLImageElement).style.transform = "scale(1)")}
           />
         ) : (
-          /* Plain <img> for external URLs not in remotePatterns */
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={image}
@@ -117,7 +106,6 @@ export default function ProductCard({
           />
         )}
 
-        {/* Gradient overlay */}
         <div style={{
           position:   "absolute",
           inset:      0,
@@ -125,7 +113,6 @@ export default function ProductCard({
           pointerEvents: "none",
         }} />
 
-        {/* Badge */}
         <div style={{
           position:       "absolute",
           top:            "14px",
@@ -145,7 +132,6 @@ export default function ProductCard({
 
       {/* Content */}
       <div style={{ padding: "20px 20px 22px" }}>
-
         <h3 style={{
           fontFamily:   "var(--font-montserrat)",
           fontSize:     "0.98rem",
@@ -200,15 +186,24 @@ export default function ProductCard({
             }}>{originalPrice}</div>
           </div>
 
-          {/* CTA */}
+          {/* Amazon Link CTA */}
           <motion.a
             href={affiliateLink}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-primary"
-            whileHover={{ scale: 1.06 }}
-            whileTap={{ scale: 0.96 }}
-            style={{ padding: "9px 18px", fontSize: "0.78rem", gap: "5px" }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "8px 14px",
+              fontSize: "0.8rem",
+              borderRadius: "8px",
+              textDecoration: "none",
+              whiteSpace: "nowrap"
+            }}
           >
             View on Amazon
             <HiExternalLink size={13} />
