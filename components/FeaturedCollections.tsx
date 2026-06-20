@@ -32,7 +32,7 @@ const categories = [
   },
   {
     icon: "📖",
-    label: "Books & Study",
+    label: "Study Essentials",
     desc: "Spaces built for deep focus",
     count: "4 picks",
     color: "#10B981",

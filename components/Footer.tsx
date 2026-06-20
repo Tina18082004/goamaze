@@ -9,7 +9,7 @@ import {
 } from "react-icons/fa";
 
 const footerLinks = {
-  Discover: ["Home Decor", "Lifestyle", "Kitchen", "Books & Study", "Entertainment"],
+  Discover: ["Home Decor", "Lifestyle", "Kitchen", "Study Essentials", "Entertainment"],
   Company: ["About Us", "How It Works", "Affiliate Disclosure", "Privacy Policy"],
   Support: ["FAQ", "Contact Us", "Suggest a Product", "Report an Issue"],
 };
